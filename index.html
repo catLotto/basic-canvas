@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+	</head>
+	<body>
+		<h1>
+			Angry Pingu
+		</h1>
+		<p>
+			Only can open localhost or server.
+			Angry Pingu Angry Pingu Angry Pingu Angry Pingu Angry Pingu Angry Pingu Angry Pingu Angry Pingu Angry Pingu Angry Pingu Angry Pingu
+		</p>
+		<p>
+			<label for='hex'>#</label>
+			<input id='hex' type='text' placeholder='RGB Hex Numbers' value='00FF00' />
+			<input id='ratio' type='text' placeholder='Ratio' value='0.58' />
+		</p>
+		<img id="originImage" src="./images/pin2.jpg" onerror="warning()">
+		<canvas id="resultCanvas" width="200" height="200"></canvas>
+		<script type='text/javascript'>
+			const hexInput = document.getElementById('hex'),
+						label = document.getElementsByTagName('label')[0],
+						ratioInput = document.getElementById('ratio');
+
+			const changeLabelColor = RGB => {
+				const R = Number('0x' + RGB.substr(0, 2)),
+					G = Number('0x' + RGB.substr(2, 2)),
+					B = Number('0x' + RGB.substr(4, 2));
+				if (255 * 3 / 2 < R + G + B) label.style['color'] = 'black';
+				else label.style['color'] = 'white';
+			};
+
+			hexInput.addEventListener('input', e => {
+				const { target } = e;
+				target.value = target.value.replace(/[^#0-9a-fA-F]/g, '').toUpperCase();
+				target.value = target.value.substr(0, 6);
+
+				if (target.value.length === 3) {
+					let HEX_NUMBERS = '';
+					for (const char of target.value) {
+						HEX_NUMBERS += char + char;
+					}
+					colorize.submit(HEX_NUMBERS);
+					changeLabelColor(HEX_NUMBERS);
+					target.parentElement.style['background'] = '#' + target.value;
+				}
+				if (target.value.length === 6) {
+					colorize.submit(target.value);
+					changeLabelColor(target.value);
+					target.parentElement.style['background'] = '#' + target.value;
+				}
+			});
+
+			ratioInput.addEventListener('input', e => {
+				const { target } = e;
+				const r = Number(target.value);
+				
+				colorize._ratio = r;
+				colorize.submit(hexInput.value);
+			});
+			
+			class Colorize {
+				constructor(resultId, originId) {
+					this.$canvas = document.getElementById(resultId);
+					this.$ctx = this.$canvas.getContext('2d');
+					this.$img = document.getElementById(originId);
+					this._ratio = 0.68;
+
+					this.$img.crossOrigin = 'Anonymous';
+					this.$img.onload = _ => {
+						this.$canvas.width = this.$img.width * 2;
+						this.$canvas.height = this.$img.height;
+						this.cw = this.$canvas.width;
+						this.ch = this.$canvas.height;
+						this.cl = this.cw * this.ch;
+						this.submit('00ff00');
+					}
+
+				}
+				submit(colorHEX, s = this) {
+					s.$ctx.drawImage(s.$img, 0, 0);
+					s.$ctx.drawImage(s.$img, s.cw / 2, 0);
+
+					s.colorize(colorHEX);
+					s.greyscale();
+				}
+				colorize(colorHEX, s = this) {
+					if (!colorHEX || colorHEX.length !== 6) return;
+					const pixels = s.$ctx.getImageData(0, 0, s.cw / 2, s.ch),
+						R = Number('0x' + colorHEX.substr(0, 2)),
+						G = Number('0x' + colorHEX.substr(2, 2)),
+						B = Number('0x' + colorHEX.substr(4, 2));
+					let OFFSET = this._ratio;
+
+					console.log('e', pixels, s.cl);
+
+					OFFSET += 1;
+					for (let i = 0; i < s.cl * 4; i += 4) {
+						let r = pixels.data[i],
+							g = pixels.data[i + 1],
+							b = pixels.data[i + 2];
+
+						r += Math.round((R - r) / OFFSET);
+						g += Math.round((G - g) / OFFSET);
+						b += Math.round((B - b) / OFFSET);
+
+						pixels.data[i] = r;
+						pixels.data[i + 1] = g;
+						pixels.data[i + 2] = b;
+					}
+					s.$ctx.putImageData(pixels, 0, 0)
+				}
+				greyscale(s = this) {
+					const pixels = s.$ctx.getImageData(s.cw / 2, 0, s.cw / 2, s.ch);
+					console.log('pixels', pixels);
+					for (let i = 0; i < s.cl * 4; i += 4) {
+						let r = pixels.data[i],
+							g = pixels.data[i + 1],
+							b = pixels.data[i + 2];
+
+						r = g = b = Math.round((r + g + b) / 3);
+
+						pixels.data[i] = r;
+						pixels.data[i + 1] = g;
+						pixels.data[i + 2] = b;
+					}
+
+					s.$ctx.putImageData(pixels, s.cw / 2, 0);
+				}
+			}
+
+			const colorize = new Colorize('resultCanvas', 'originImage');
+		</script>
+	</body>
+
+</html>
