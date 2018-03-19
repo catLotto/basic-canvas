@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Get Average Color</title>
+	<style type="text/css">
+		#picture[src="./images/noimg.png"] {
+			width: 500px;	
+			height: 300px;
+			border: 1px solid #ccc;
+		}
+		#picture:not([src="./images/noimg.png"]) {
+			max-width: 500px;
+			border: 1px dashed #ccc;
+		}
+		
+		#resultColor {
+			width: 150px;
+			height: 150px;
+		}
+	</style>
+</head>
+<body>
+	<div>
+		<img id='picture' src='./images/noimg.png' />
+	</div>
+	<div>
+		<input id='uploadInput' type='file' accept='image/*' />
+	</div>
+	<div>
+		<canvas id='resultColor'></canvas>
+	</div>
+	<input id='resultRGB' type='text' disabled />
+	<script type='text/javascript'>
+		uploadInput.addEventListener('change', e => {
+			if (e.target.files[0]) {
+				if (e.target.files[0].type.search('image') === -1) {
+					e.target.value = '';
+					throw Error('Only can upload image file.');
+				}
+			} else {
+				return picture.src = './images/noimg.png';
+			}
+			
+		 const fr = new FileReader();
+			fr.onload = _=> c.initialize(picture, fr.result);
+			fr.readAsDataURL(e.target.files[0]);
+		});
+		
+		class CanvasForColor {
+			constructor(name) {
+				this.$el = document.getElementById(name);
+				this.$ctx = this.$el.getContext('2d');
+			}
+			initialize(img, src, s = this) {
+				s.w = s.$el.width = img.width;
+				s.h = s.$el.height = img.height;
+				s.length = s.w * s.h
+				img.crossOrigin = 'Anonymous';
+				img.onload = _=> {
+					s.$ctx.drawImage(img, 0, 0);
+					resultRGB.value = s.getAverageColor();
+				}
+				img.src = src;
+			}
+			getAverageColor(s = this) {
+				const { floor } = Math;
+				const pixels = s.$ctx.getImageData(0, 0, s.w, s.h);
+				let R = 0,
+						G = 0,
+						B = 0,
+						A = 0;
+				
+				for (let i = 0; i < s.length * 4; i += 4) {
+					R += pixels.data[i];
+					G += pixels.data[i + 1];
+					B += pixels.data[i + 2];
+					A += pixels.data[i + 3];
+				}
+				R = floor(R / s.length);
+				G = floor(G / s.length);
+				B = floor(B / s.length);
+				A = floor(A / s.length);
+				
+				s.$ctx.fillStyle = `rgba(${ R }, ${ G }, ${ B }, ${ A })`;
+				s.$ctx.fillRect(0, 0, s.w, s.h);
+				s.$ctx.fill();
+				
+				return s.$ctx.fillStyle;
+			}
+			
+		}
+		const c = new CanvasForColor('resultColor');
+	</script>
+</body>
+</html>
