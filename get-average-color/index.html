@@ -4,6 +4,9 @@
 	<meta charset="UTF-8">
 	<title>Get Average Color</title>
 	<style type="text/css">
+		body > * {
+			display: block;
+		}
 		#picture[src="./images/noimg.png"] {
 			width: 500px;	
 			height: 300px;
@@ -21,15 +24,9 @@
 	</style>
 </head>
 <body>
-	<div>
-		<img id='picture' src='./images/noimg.png' />
-	</div>
-	<div>
-		<input id='uploadInput' type='file' accept='image/*' />
-	</div>
-	<div>
-		<canvas id='resultColor'></canvas>
-	</div>
+	<img id='picture' src='./images/noimg.png' />
+	<input id='uploadInput' type='file' accept='image/*' />
+	<canvas id='resultColor'></canvas>
 	<input id='resultRGB' type='text' disabled />
 	<script type='text/javascript'>
 		uploadInput.addEventListener('change', e => {
